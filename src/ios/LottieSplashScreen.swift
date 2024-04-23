@@ -1,15 +1,19 @@
 import Lottie
 
 @objc(LottieSplashScreen) class LottieSplashScreen: CDVPlugin {
-    var animationView: LottieAnimationView?
+    var animationView: AnimationView?
     var animationViewContainer: UIView?
     var visible = false
     var animationEnded = false
     var callbackId: String?
 
     override func pluginInitialize() {
-        createObservers()
-        createView()
+      print("Plugin initialized")
+        // createObservers()
+        // createView()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { // Change `2.0` to the desired number of seconds.
+                self.createView()
+            }
     }
 
     @objc(hide:)
@@ -47,6 +51,7 @@ import Lottie
     }
 
     @objc private func destroyView(_: UITapGestureRecognizer? = nil) {
+      print("Destroying view. Visible: \(visible)")
         if visible {
             let fadeOutDuation = Double(commandDelegate?.settings["LottieFadeOutDuration".lowercased()] as? String ?? "0")!
             if fadeOutDuation > 0 {
@@ -76,6 +81,8 @@ import Lottie
     }
 
     private func createView(location: String? = nil, remote: Bool? = nil, width: Int? = nil, height: Int? = nil, callbackId: String? = nil) {
+      print("Creating view with location: \(String(describing: location)), remote: \(String(describing: remote)), width: \(String(describing: width)), height: \(String(describing: height))")
+
         if !visible {
             self.callbackId = callbackId
             let parentView = viewController.view
@@ -115,15 +122,27 @@ import Lottie
         let parentView = viewController.view
         parentView?.isUserInteractionEnabled = false
 
+        // Log the parent view's bounds to ensure it is the expected size
+        print("Parent view bounds: \(String(describing: parentView?.bounds))")
+
         animationViewContainer = UIView(frame: (parentView?.bounds)!)
         animationViewContainer?.layer.zPosition = 1
 
+        // Log the frame of the animation container to check if it matches the parent view
+        print("Animation view container frame: \(animationViewContainer?.frame)")
+
         let backgroundColor = getUIModeDependentPreference(basePreferenceName: "LottieBackgroundColor", defaultValue: "#ffffff")
+
+        // Log the resolved background color to check if it's being set correctly
+        print("Animation view container background color: \(backgroundColor)")
 
         animationViewContainer?.autoresizingMask = [
             .flexibleWidth, .flexibleHeight, .flexibleTopMargin, .flexibleLeftMargin, .flexibleBottomMargin, .flexibleRightMargin
         ]
         animationViewContainer?.backgroundColor = UIColor(hex: backgroundColor)
+
+        // If you want to confirm the autoresizing mask is set correctly
+        print("Animation view container autoresizing mask: \(String(describing: animationViewContainer?.autoresizingMask))")
     }
 
     private func createAnimationView(location: String? = nil, remote: Bool? = nil, width: Int? = nil, height: Int? = nil) throws {
@@ -137,17 +156,18 @@ import Lottie
         if isRemote(remote: remote) {
             let cacheDisabled = (commandDelegate?.settings["LottieCacheDisabled".lowercased()] as? NSString ?? "false").boolValue
             guard let url = URL(string: animationLocation) else { throw LottieSplashScreenError.invalidURL }
-            animationView = LottieAnimationView(url: url, closure: { error in
+            animationView = AnimationView(url: url, closure: { error in
                 if error == nil {
+                  self.calculateAnimationSize(width: width, height: height)
                     self.playAnimation()
                 } else {
                     self.destroyView()
                     self.processInvalidURLError(error: error!)
                 }
-            }, animationCache: cacheDisabled ? nil : DefaultAnimationCache.sharedCache)
+            }, animationCache: cacheDisabled ? nil : LRUAnimationCache.sharedCache)
         } else {
             animationLocation = Bundle.main.bundleURL.appendingPathComponent(animationLocation).path
-            animationView = LottieAnimationView(filePath: animationLocation)
+            animationView = AnimationView(filePath: animationLocation)
         }
 
         calculateAnimationSize(width: width, height: height)
@@ -156,16 +176,19 @@ import Lottie
         if loop {
             animationView?.loopMode = .loop
         }
-        animationView?.contentMode = .scaleAspectFit
+        animationView?.contentMode = .scaleAspectFill
         animationView?.animationSpeed = 1
         animationView?.autoresizesSubviews = true
         animationView?.backgroundBehavior = .pauseAndRestore
     }
 
     private func calculateAnimationSize(width: Int? = nil, height: Int? = nil) {
+
+
         let fullScreenzSize = UIScreen.main.bounds
         var animationWidth: CGFloat
         var animationHeight: CGFloat
+
 
         let useFullScreen = (commandDelegate?.settings["LottieFullScreen".lowercased()] as? NSString ?? "false").boolValue
         if useFullScreen {
@@ -203,12 +226,15 @@ import Lottie
                     Int(commandDelegate?.settings["LottieHeight".lowercased()] as? String ?? "200")!)
             }
         }
+        print("Animation size calculated as width: \(animationWidth), height: \(animationHeight)")
+
         animationView?.frame = CGRect(x: 0, y: 0, width: animationWidth, height: animationHeight)
         animationView?.center = CGPoint(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY)
     }
 
     private func playAnimation() {
         animationView?.play { finished in
+              print("Playing animation. Finished: \(finished)")
             var event = "lottieAnimationEnd"
             if !finished {
                 event =  "lottieAnimationCancel"
@@ -285,6 +311,7 @@ import Lottie
     }
 
     @objc private func deviceOrientationChanged() {
+      print("Device orientation changed")
         animationView?.center = CGPoint(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY)
     }
 }
