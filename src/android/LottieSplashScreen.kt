@@ -228,10 +228,7 @@ class LottieSplashScreen : CordovaPlugin() {
 
         val color =
             ColorHelper.parseColor(
-                getUIModeDependentPreference(
-                    "LottieBackgroundColor",
-                    "#ffffff",
-                ),
+                preferences.getString("LottieBackgroundColor", "#ffffff")
             )
         animationView.setBackgroundColor(color)
 
