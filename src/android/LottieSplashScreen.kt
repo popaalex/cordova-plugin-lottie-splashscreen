@@ -226,18 +226,19 @@ class LottieSplashScreen : CordovaPlugin() {
                 ).uppercase(Locale.ENGLISH),
             )
 
-        val color =
-            ColorHelper.parseColor(
-                preferences.getString("LottieBackgroundColor", "#ffffff")
-            )
-        animationView.setBackgroundColor(color)
+      val colorString = preferences.getString("LottieBackgroundColor", "#ffffff")
+      val color = ColorHelper.parseColor(colorString)
+
+      Log.i(ColorHelper.LOG_TAG, "Setting background color to: $colorString (parsed: $color)")
+
+      animationView.setBackgroundColor(color)
 
         val fullScreen = preferences.getBoolean("LottieFullScreen", false)
         val splashScreenStyle = context.resources.getIdentifier(
             "SplashScreenStyle", "style", context.packageName
         )
-        val dialogStyle = if (splashScreenStyle != 0) splashScreenStyle 
-                        else if (fullScreen) android.R.style.Theme_NoTitleBar_Fullscreen 
+        val dialogStyle = if (splashScreenStyle != 0) splashScreenStyle
+                        else if (fullScreen) android.R.style.Theme_NoTitleBar_Fullscreen
                         else android.R.style.Theme_Translucent_NoTitleBar
 
         splashDialog = Dialog(context, dialogStyle)

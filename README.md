@@ -14,6 +14,39 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![npm](https://img.shields.io/npm/v/cordova-plugin-lottie-splashscreen.svg)](https://www.npmjs.com/package/cordova-plugin-lottie-splashscreen)
 
+## notes
+## Capacitor Configuration
+
+Adjust the following settings in your Capacitor configuration file to set preferences for Cordova plugins, especially for handling different behaviors across Android and iOS:
+
+```json
+{
+  "cordova": {
+    "preferences": {
+      "LottieFullScreen": "true",
+      "LottieAnimationLocation": "public/assets/splash-screen-2.json",
+      "LottieBackgroundColor": "800080",        // without '#' for Android
+      "LottieBackgroundColorDark": "#800080",   // with '#' as it is intended for iOS
+      "LottieBackgroundColorLight": "#800080",
+      "LottieHideAfterAnimationEnd": "true"
+    }
+  }
+}
+```
+## Android Styles Configuration
+
+
+```xml
+<style name="SplashScreenStyle">
+    <item name="android:windowFullscreen">false</item>  <!-- Keeps the status bar visible -->
+    <item name="android:windowTranslucentNavigation">true</item>  <!-- Makes the navigation bar translucent -->
+    <item name="android:windowTranslucentStatus">true</item>  <!-- Makes the status bar translucent -->
+    <item name="android:windowDrawsSystemBarBackgrounds">true</item>  <!-- Allows the app to draw behind the status and navigation bars -->
+    <item name="android:windowLightStatusBar">false</item>  <!-- Ensures the content in the status bar remains visible -->
+</style>
+```
+
+
 #### Apache Cordova plugin to show bodymovin/Lottie animations as the splash screen with [Airbnb's Lottie](https://airbnb.io/lottie/) wrapper
 
 ### Supported platforms
